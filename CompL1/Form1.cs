@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
@@ -10,8 +11,15 @@ namespace CompL1
         bool isEdited = false;
         //List<string> buffer = new List<string>();
 
+        string lexemes = @"\b(int|char|string)";
+
         public Form1()
         {
+            this.AllowDrop = true;
+
+            // Add event handlers for the drag & drop functionality
+            this.DragEnter += new DragEventHandler(Form1_DragEnter);
+            this.DragDrop += new DragEventHandler(Form1_DragDrop);
             InitializeComponent();
         }
 
@@ -172,7 +180,68 @@ namespace CompL1
 
         private void richTextBox1_TextChanged(object sender, EventArgs e)
         {
+            MatchCollection lexeme_matches = Regex.Matches(richTextBox1.Text, lexemes);
+            int st = richTextBox1.SelectionStart, end = richTextBox1.SelectionLength;
+            Color orig = Color.Black;
+
+            richTextBox2.Text = Lexer.lexText(richTextBox1.Text);    
+
+            richTextBox1.SelectionStart = 0;
+            richTextBox1.SelectionLength = richTextBox1.Text.Length;
+            richTextBox1.SelectionColor = orig;
+
+            richTextBox2.Focus();
+            foreach (Match match in lexeme_matches)
+            {
+                richTextBox1.SelectionStart = match.Index;
+                richTextBox1.SelectionLength = match.Length;
+                richTextBox1.SelectionColor = Color.Red;
+            }
+            richTextBox1.Focus();
+            richTextBox1.SelectionStart = st;
+            richTextBox1.SelectionLength = end;
+            richTextBox1.SelectionColor = orig;
+
             //buffer.Add(richTextBox1.Text);
+
+            string[] splittedLines = richTextBox1.Text.Split(new string[] { "\r", "\n", "\r\n" }
+            , StringSplitOptions.None);
+            int linecount = splittedLines.Length;
+
+            if (linecount != 0)
+            {
+                richTextBox3.Clear();
+                for (int i = 1; i < linecount + 1; i++)
+                {
+                    richTextBox3.AppendText(Convert.ToString(i) + "\n");
+                }
+            }
+        }
+
+        // This event occurs when the user drags over the form with 
+        // the mouse during a drag drop operation 
+        void Form1_DragEnter(object sender, DragEventArgs e)
+        {
+            // Check if the Dataformat of the data can be accepted
+            // (we only accept file drops from Explorer, etc.)
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Copy; // Okay
+            else
+                e.Effect = DragDropEffects.None; // Unknown data, ignore it
+
+        }
+
+        // Occurs when the user releases the mouse over the drop target 
+        void Form1_DragDrop(object sender, DragEventArgs e)
+        {
+            // Extract the data from the DataObject-Container into a string list
+            string[] FileList = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+
+            // Do something with the data...
+
+            // For example add all files into a simple label control:
+            foreach (string File in FileList)
+                this.richTextBox1.Text += File + "\n";
         }
     }
 }
