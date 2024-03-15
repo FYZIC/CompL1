@@ -26,7 +26,7 @@ enum samyil {first = 1, second, third};
 enum ff445dd {el1=1, el2=2, el3=3};
 ```
 ## Диаграмма состояний сканера
-![alt text](lexer_diagram.png)
+![alt text](lexer_diagram.jpg)
 
 ## Тестовые примеры
 ![alt text](image-3.PNG)
