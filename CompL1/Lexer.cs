@@ -1,5 +1,7 @@
 ﻿
 using System;
+using System.Diagnostics.Metrics;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 namespace CompL1
@@ -8,16 +10,20 @@ namespace CompL1
     {
         static Token lexer(string strToLex)
         {
-
             switch (strToLex)
             {
                 case "enum": return new Token("ключевое слово", TokenType.TOKEN_ENUM);
+                case "class": return new Token("ключевое слово", TokenType.TOKEN_CLASS);
                 case "=": return new Token("оператор присваивания", TokenType.TOKEN_EQUALS);
                 case ";": return new Token("конец оператора", TokenType.TOKEN_SEMICOLON);
                 case "{": return new Token("открывающая фигурная скобка", TokenType.TOKEN_OPEN_BRACE);
                 case "}": return new Token("закрывающая фигурная скобка", TokenType.TOKEN_CLOSE_BRACE);
                 case ",": return new Token("запятая", TokenType.TOKEN_COMMA);
-                case " ": return new Token("разделитель", TokenType.TOKEN_WHITESPACE);
+                case " ":
+                case "\n":
+                case "\t":
+                    return new Token("разделитель", TokenType.TOKEN_WHITESPACE);
+                case "":
                 default: break;
             }
             Regex ident = new Regex("[A-Za-z_]([A-Za-z_]|[0-9])*");
@@ -42,64 +48,137 @@ namespace CompL1
 
         public static string lexText(string text)
         {
+            Parser parser = new Parser();
             string temp = string.Empty;
-            int current_line = 0;
-            int start_pos = 0;
-            int end_pos = 0;
+            int curLine = 0;
+            int startPos = 0;
+            int endPos = 0;
             string finalText = string.Empty;
-            Token currentToken = lexer(text[0].ToString());
+
+            if (text == "")
+                return "";
+
+            Token curToken = lexer(text[0].ToString());
             Token tempToken;
-            int countOfErrors = 0;
+            int countErr = 0;
+
             for (int i = 0; i < text.Length; i++)
             {
                 tempToken = lexer(text[i].ToString());
-                if (currentToken.Type == TokenType.TOKEN_IDENT && tempToken.Type == TokenType.TOKEN_ERROR)
+
+                if (curToken.Type == TokenType.TOKEN_IDENT && tempToken.Type == TokenType.TOKEN_ERROR)
                 {
-                    tempToken = currentToken;
+                    tempToken = curToken;
                 }
-                if (tempToken.Type != currentToken.Type)
+
+                if (tempToken.Type != curToken.Type)
                 {
-                    currentToken = lexer(temp);
+                    curToken = lexer(temp);
 
-                    end_pos--;
+                    endPos--;
 
-                    finalText += "Current Token: " + currentToken.Type + " - " + currentToken.Name + " - " + temp + " - " + " position" +
-                        " [" + start_pos + "," + end_pos + "]" + " line: " + current_line + "\n";
+                    if (parser.Parserr(curToken) == States.ERROR)
+                    {
+                        finalText += "Ошибка: " + curToken.Type + " - " + temp + " - " + " position" +
+                          " [" + startPos + "," + endPos + "]" + " line: " + curLine + "\n";
+                        countErr++;
+                    }
+
                     if (temp == "\n")
                     {
-                        current_line++;
-                        start_pos = 0;
-                        end_pos = 0;
+                        curLine++;
+                        startPos = 0;
+                        endPos = 0;
                         temp = string.Empty;
-                        currentToken = tempToken;
+                        curToken = tempToken;
                     }
                     else
                     {
-                        end_pos++;
-                        start_pos = end_pos;
+                        endPos++;
+                        startPos = endPos;
                         temp = string.Empty;
-                        currentToken = tempToken;
+                        curToken = tempToken;
                     }
                 }
 
                 temp += text[i];
-                end_pos++;
+                endPos++;
             }
-            currentToken = lexer(temp);
-            end_pos--;
-            finalText += "Current Token: " + currentToken.Type + " - " + currentToken.Name + " - " + temp + " - " + " position" +
-                " [" + start_pos + "," + end_pos + "]" + " line: " + current_line + "\n";
-            if (countOfErrors == 0)
-            {
+            curToken = lexer(temp);
+            endPos--;
+
+            if (countErr == 0)
                 finalText += "Ошибок нет";
-            }
+            else
+                finalText += "Всего ошибок: " + countErr;
+
             return finalText;
+
+
+        }
+
+        public static string QuickFixErrors(string text)
+        {
+            Parser parser = new Parser();
+            string temp = string.Empty;
+            int curLine = 0;
+            int startPos = 0;
+            int endPos = 0;
+            string finalText = string.Empty;
+
+            if (text == "")
+                return "";
+
+            Token curToken = lexer(text[0].ToString());
+            Token tempToken;
+            int countErr = 0;
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                tempToken = lexer(text[i].ToString());
+
+                if (curToken.Type == TokenType.TOKEN_IDENT && tempToken.Type == TokenType.TOKEN_ERROR)
+                {
+                    tempToken = curToken;
+                }
+
+                if (tempToken.Type != curToken.Type)
+                {
+                    curToken = lexer(temp);
+
+                    endPos--;
+
+                    if (parser.Parserr(curToken) != States.ERROR)
+                    {
+                        finalText += temp;
+                    }
+
+                    if (temp == "\n")
+                    {
+                        temp = string.Empty;
+                        curToken = tempToken;
+                    }
+                    else
+                    {
+                        temp = string.Empty;
+                        curToken = tempToken;
+                    }
+                }
+
+                temp += text[i];
+            }
+            curToken = lexer(temp);
+
+            return finalText;
+
+
         }
     }
 
     enum TokenType
     {
         TOKEN_ENUM = 1,
+        TOKEN_CLASS,
         TOKEN_IDENT,
         TOKEN_WHITESPACE,
         TOKEN_EQUALS,
@@ -125,3 +204,48 @@ namespace CompL1
         public TokenType Type { get { return type; } set { type = value; } }
     }
 }
+
+/* <DEF> -> 'enum' -> <CLASS>
+<DEF> -> 'enum' -> <ENUM_ID>
+<CLASS> -> 'class' -> <ENUM_ID>
+<ENUM_ID> -> (letter | _) -> <ENUM_IDREM>
+<ENUM_IDREM> -> (digit|letter|_) -><ENUM_IDREM>
+<ENUM_IDREM> -> '{' <OPEN_BRACE>
+<ENUM_IDREM> -> <END>
+<OPEN_BRACE> -> <ID>
+<OPEN_BRACE> -> '}' <END>
+<ID> -> (letter | _) <IDREM>
+<IDREM> -> (digit|letter|_) <IDREM>
+<IDREM> -> '}' <END>
+<IDREM> -> '=' <NUMBER>
+<IDREM> -> ',' <ID>
+<NUMBER> -> digit <NUMBER_REM>
+<NUMBER_REM> -> digit <NUMBER_REM>
+<NUMBER_REM> -> '}' <END>
+<NUMBER_REM> -> ',' <ID> 
+<END> ; -> */
+
+/* <DEF> -> 'enum' <ENUM>
+<ENUM> -> (digit|letter|_) <ENUM_ID>
+<ENUM> -> 'class'  <CLASS>
+<CLASS> -> (digit|letter|_) <ENUM_ID>
+<ENUM_ID> -> '{' <OPEN_BRACE>
+<ENUM_ID> -> ';' <SEMICOLON>
+<OPEN_BRACE> -> (digit|letter|_) <ID>
+<OPEN_BRACE> -> '}' <CLOSE_BRACE>
+<ID> -> '}' <CLOSE_BRACE>
+<ID> -> '=' <EQUAL>
+<EQUAL> -> digit <NUMBER>
+<ID> -> ',' <COMMA>
+<COMMA> -> (digit|letter|_) <ID>
+<NUMBER> -> '}' <CLOSE_BRACE>
+<NUMBER> -> ',' <COMMA> 
+<CLOSE_BRACE> -> ';' <SEMICOLON>
+<SEMICOLON> -> <END>*/
+
+//enum dfer { };
+//enum class dfg { };
+//enum dfg2 {esrgdthy };
+//enum dfg3 {efrg = 3 };
+//enum dfg4 {dfg = 8, rtg };
+//enum dffgg;

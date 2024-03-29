@@ -9,7 +9,6 @@ namespace CompL1
         Stream fileStream;
         public string filePath;
         bool isEdited = false;
-        //List<string> buffer = new List<string>();
 
         string lexemes = @"\b(int|char|string)";
 
@@ -17,7 +16,6 @@ namespace CompL1
         {
             this.AllowDrop = true;
 
-            // Add event handlers for the drag & drop functionality
             this.DragEnter += new DragEventHandler(Form1_DragEnter);
             this.DragDrop += new DragEventHandler(Form1_DragDrop);
             InitializeComponent();
@@ -30,15 +28,12 @@ namespace CompL1
                 fileStream.Close();
             }
 
-            //buffer.Clear();
             richTextBox1.Text = string.Empty;
         }
 
         private void OpenToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //buffer.Add(richTextBox1.Text);
             var fileContent = string.Empty;
-            //var filePath = string.Empty;
 
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
@@ -49,10 +44,7 @@ namespace CompL1
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    //Get the path of specified file
                     filePath = openFileDialog.FileName;
-
-                    //Read the contents of the file into a stream
                     fileStream = openFileDialog.OpenFile();
 
                     using (StreamReader reader = new StreamReader(fileStream))
@@ -108,8 +100,6 @@ namespace CompL1
 
         private void UndoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
-            //richTextBox1.Text = buffer.ToArray()[buffer.Count - 1];
             richTextBox1.Undo();
         }
 
@@ -128,7 +118,6 @@ namespace CompL1
 
         private void CutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //buffer.Add(richTextBox1.Text);
             if (richTextBox1.TextLength > 0)
             {
                 richTextBox1.Cut();
@@ -137,7 +126,6 @@ namespace CompL1
 
         private void PasteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //buffer.Add(richTextBox1.Text);
             if (richTextBox1.TextLength > 0)
             {
                 richTextBox1.Paste();
@@ -163,7 +151,6 @@ namespace CompL1
 
         private void DeleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //buffer.Add(richTextBox1.Text);
             if (richTextBox1.TextLength > 0)
             {
                 richTextBox1.SelectedText = "";
@@ -184,7 +171,8 @@ namespace CompL1
             int st = richTextBox1.SelectionStart, end = richTextBox1.SelectionLength;
             Color orig = Color.Black;
 
-            richTextBox2.Text = Lexer.lexText(richTextBox1.Text);    
+            richTextBox2.Text = Lexer.lexText(richTextBox1.Text);
+            richTextBox4.Text = Lexer.QuickFixErrors(richTextBox1.Text);
 
             richTextBox1.SelectionStart = 0;
             richTextBox1.SelectionLength = richTextBox1.Text.Length;
@@ -202,8 +190,6 @@ namespace CompL1
             richTextBox1.SelectionLength = end;
             richTextBox1.SelectionColor = orig;
 
-            //buffer.Add(richTextBox1.Text);
-
             string[] splittedLines = richTextBox1.Text.Split(new string[] { "\r", "\n", "\r\n" }
             , StringSplitOptions.None);
             int linecount = splittedLines.Length;
@@ -218,30 +204,25 @@ namespace CompL1
             }
         }
 
-        // This event occurs when the user drags over the form with 
-        // the mouse during a drag drop operation 
         void Form1_DragEnter(object sender, DragEventArgs e)
         {
-            // Check if the Dataformat of the data can be accepted
-            // (we only accept file drops from Explorer, etc.)
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
-                e.Effect = DragDropEffects.Copy; // Okay
+                e.Effect = DragDropEffects.Copy;
             else
-                e.Effect = DragDropEffects.None; // Unknown data, ignore it
-
+                e.Effect = DragDropEffects.None;
         }
 
-        // Occurs when the user releases the mouse over the drop target 
         void Form1_DragDrop(object sender, DragEventArgs e)
         {
-            // Extract the data from the DataObject-Container into a string list
             string[] FileList = (string[])e.Data.GetData(DataFormats.FileDrop, false);
 
-            // Do something with the data...
-
-            // For example add all files into a simple label control:
             foreach (string File in FileList)
                 this.richTextBox1.Text += File + "\n";
+        }
+
+        private void richTextBox4_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
