@@ -12,10 +12,10 @@ namespace CompL1
 {
     public partial class SaveForm : Form
     {
-        Form1 form1;
+        MainForm form1;
         string filePath1;
 
-        public SaveForm(Form1 owner)
+        public SaveForm(MainForm owner)
         {
             InitializeComponent();
             form1 = owner;
