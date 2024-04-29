@@ -27,5 +27,5 @@ enum ff445dd {el1=1, el2=2, el3=3};
 ## Граф конечного автомата
 ![alt text](граф.PNG)
 ## Тестовые примеры
-![alt text](444.PNG)
-![alt text](555.PNG)
+![alt text](тест1.PNG)
+![alt text](тест2.PNG)
