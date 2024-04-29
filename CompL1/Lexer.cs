@@ -1,251 +1,124 @@
-﻿
-using System;
-using System.Diagnostics.Metrics;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace CompL1
+public enum TokenType
 {
-    internal class Lexer
+    IDENT,
+    ENUM_KEYWORD,
+    CLASS_KEYWORD,
+    OPEN_BRACE,
+    EQUALS,
+    NUMBER,
+    COMMA,
+    CLOSE_BRACE,
+    SEMICOLON,
+    NEWLINE,
+    INVALID
+};
+
+public class Token
+{
+    public string value;
+    public int start,
+               end;
+    public TokenType type;
+
+    public Token()
     {
-        static Token lexer(string strToLex)
-        {
-            switch (strToLex)
-            {
-                case "enum": return new Token("ключевое слово", TokenType.TOKEN_ENUM);
-                case "class": return new Token("ключевое слово", TokenType.TOKEN_CLASS);
-                case "=": return new Token("оператор присваивания", TokenType.TOKEN_EQUALS);
-                case ";": return new Token("конец оператора", TokenType.TOKEN_SEMICOLON);
-                case "{": return new Token("открывающая фигурная скобка", TokenType.TOKEN_OPEN_BRACE);
-                case "}": return new Token("закрывающая фигурная скобка", TokenType.TOKEN_CLOSE_BRACE);
-                case ",": return new Token("запятая", TokenType.TOKEN_COMMA);
-                case " ":
-                case "\n":
-                case "\t":
-                    return new Token("разделитель", TokenType.TOKEN_WHITESPACE);
-                case "":
-                default: break;
-            }
-            Regex ident = new Regex("[A-Za-z_]([A-Za-z_]|[0-9])*");
-            Regex number = new Regex("[0-9]+");
-
-            if (ident.IsMatch(strToLex))
-            {
-                Match match = ident.Match(strToLex);
-                string str = match.Value;
-                return new Token("идентификатор", TokenType.TOKEN_IDENT);
-            }
-
-
-            if (number.IsMatch(strToLex))
-            {
-                Match match = number.Match(strToLex);
-                string str = match.Value;
-                return new Token("число", TokenType.TOKEN_NUMBER);
-            }
-            return new Token("недопустимый символ", TokenType.TOKEN_ERROR);
-        }
-
-        public static string lexText(string text)
-        {
-            Parser parser = new Parser();
-            string temp = string.Empty;
-            int curLine = 0;
-            int startPos = 0;
-            int endPos = 0;
-            string finalText = string.Empty;
-
-            if (text == "")
-                return "";
-
-            Token curToken = lexer(text[0].ToString());
-            Token tempToken;
-            int countErr = 0;
-
-            for (int i = 0; i < text.Length; i++)
-            {
-                tempToken = lexer(text[i].ToString());
-
-                if (curToken.Type == TokenType.TOKEN_IDENT && tempToken.Type == TokenType.TOKEN_ERROR)
-                {
-                    tempToken = curToken;
-                }
-
-                if (tempToken.Type != curToken.Type)
-                {
-                    curToken = lexer(temp);
-
-                    endPos--;
-
-                    if (parser.Parserr(curToken) == States.ERROR)
-                    {
-                        finalText += "Ошибка: " + curToken.Type + " - " + temp + " - " + " position" +
-                          " [" + startPos + "," + endPos + "]" + " line: " + curLine + "\n";
-                        countErr++;
-                    }
-
-                    if (temp == "\n")
-                    {
-                        curLine++;
-                        startPos = 0;
-                        endPos = 0;
-                        temp = string.Empty;
-                        curToken = tempToken;
-                    }
-                    else
-                    {
-                        endPos++;
-                        startPos = endPos;
-                        temp = string.Empty;
-                        curToken = tempToken;
-                    }
-                }
-
-                temp += text[i];
-                endPos++;
-            }
-            curToken = lexer(temp);
-            endPos--;
-
-            if (countErr == 0)
-                finalText += "Ошибок нет";
-            else
-                finalText += "Всего ошибок: " + countErr;
-
-            return finalText;
-
-
-        }
-
-        public static string QuickFixErrors(string text)
-        {
-            Parser parser = new Parser();
-            string temp = string.Empty;
-            int curLine = 0;
-            int startPos = 0;
-            int endPos = 0;
-            string finalText = string.Empty;
-
-            if (text == "")
-                return "";
-
-            Token curToken = lexer(text[0].ToString());
-            Token tempToken;
-            int countErr = 0;
-
-            for (int i = 0; i < text.Length; i++)
-            {
-                tempToken = lexer(text[i].ToString());
-
-                if (curToken.Type == TokenType.TOKEN_IDENT && tempToken.Type == TokenType.TOKEN_ERROR)
-                {
-                    tempToken = curToken;
-                }
-
-                if (tempToken.Type != curToken.Type)
-                {
-                    curToken = lexer(temp);
-
-                    endPos--;
-
-                    if (parser.Parserr(curToken) != States.ERROR)
-                    {
-                        finalText += temp;
-                    }
-
-                    if (temp == "\n")
-                    {
-                        temp = string.Empty;
-                        curToken = tempToken;
-                    }
-                    else
-                    {
-                        temp = string.Empty;
-                        curToken = tempToken;
-                    }
-                }
-
-                temp += text[i];
-            }
-            curToken = lexer(temp);
-
-            return finalText;
-
-
-        }
+        this.value = "";
+        this.start = 0;
+        this.end = 0;
+        this.type = TokenType.INVALID;
     }
 
-    enum TokenType
+    public Token(string expr, int start, int end, TokenType type)
     {
-        TOKEN_ENUM = 1,
-        TOKEN_CLASS,
-        TOKEN_IDENT,
-        TOKEN_WHITESPACE,
-        TOKEN_EQUALS,
-        TOKEN_SEMICOLON,
-        TOKEN_OPEN_BRACE,
-        TOKEN_CLOSE_BRACE,
-        TOKEN_COMMA,
-        TOKEN_NUMBER,
-        TOKEN_ERROR,
-    };
+        this.value = expr.Substring(start, end - start + 1);
+        this.start = start;
+        this.end = end;
 
-    internal class Token
-    {
-        string name;
-        TokenType type;
-        public Token(string name, TokenType type)
-        {
-            this.name = name;
-            this.type = type;
-        }
-
-        public string Name { get { return name; } set { name = value; } }
-        public TokenType Type { get { return type; } set { type = value; } }
+        if (this.value == "enum") this.type = TokenType.ENUM_KEYWORD;
+        else if (this.value == "class") this.type = TokenType.CLASS_KEYWORD;
+        else this.type = type;
     }
-}
 
-/* <DEF> -> 'enum' -> <CLASS>
-<DEF> -> 'enum' -> <ENUM_ID>
-<CLASS> -> 'class' -> <ENUM_ID>
-<ENUM_ID> -> (letter | _) -> <ENUM_IDREM>
-<ENUM_IDREM> -> (digit|letter|_) -><ENUM_IDREM>
-<ENUM_IDREM> -> '{' <OPEN_BRACE>
-<ENUM_IDREM> -> <END>
-<OPEN_BRACE> -> <ID>
-<OPEN_BRACE> -> '}' <END>
-<ID> -> (letter | _) <IDREM>
-<IDREM> -> (digit|letter|_) <IDREM>
-<IDREM> -> '}' <END>
-<IDREM> -> '=' <NUMBER>
-<IDREM> -> ',' <ID>
-<NUMBER> -> digit <NUMBER_REM>
-<NUMBER_REM> -> digit <NUMBER_REM>
-<NUMBER_REM> -> '}' <END>
-<NUMBER_REM> -> ',' <ID> 
-<END> ; -> */
+    public string Stringize()
+    {
+        string ret = "name='" + (this.type == TokenType.NEWLINE ? "\\n" : this.value) + "' start=" + this.start + " end=" + this.end + " type=" + this.type;
+        return ret;
+    }
+};
 
-/* <DEF> -> 'enum' <ENUM>
-<ENUM> -> (digit|letter|_) <ENUM_ID>
-<ENUM> -> 'class'  <CLASS>
-<CLASS> -> (digit|letter|_) <ENUM_ID>
-<ENUM_ID> -> '{' <OPEN_BRACE>
-<ENUM_ID> -> ';' <SEMICOLON>
-<OPEN_BRACE> -> (digit|letter|_) <ID>
-<OPEN_BRACE> -> '}' <CLOSE_BRACE>
-<ID> -> '}' <CLOSE_BRACE>
-<ID> -> '=' <EQUAL>
-<EQUAL> -> digit <NUMBER>
-<ID> -> ',' <COMMA>
-<COMMA> -> (digit|letter|_) <ID>
-<NUMBER> -> '}' <CLOSE_BRACE>
-<NUMBER> -> ',' <COMMA> 
-<CLOSE_BRACE> -> ';' <SEMICOLON>
-<SEMICOLON> -> <END>*/
+public class Lexer
+{
+    public List<Token> tokenize(string text)
+    {
+        List<Token> tokens = new List<Token>();
+        TokenType type = TokenType.IDENT;
+        int start = 0, end = 0;
+        for (int i = 0; i < text.Length; i++)
+        {
+            start = end;
+            switch (text[i])
+            {
+                case ' ':
+                    end++;
+                    continue;
+                case >= 'a' and <= 'z':
+                case >= 'A' and <= 'Z':
+                    while ((i != text.Length) && 
+                        ((text[i] >= 'a' && text[i] <= 'z') ||
+                        (text[i] >= 'A' && text[i] <= 'Z') ||
+                        (text[i] == '_') ||
+                        (text[i] >= '0' && text[i] <= '9')))
+                    {
+                            i++;
+                            end++;
+                    }
+                    i--;
+                    end--;
+                    type = TokenType.IDENT;
+                    break;
+                case >= '0' and <= '9':
+                    while ((i != text.Length) && (text[i] >= '0' && text[i] <= '9'))
+                    {
+                            i++;
+                            end++;
+                    }
+                    i--;
+                    end--;
+                    type = TokenType.NUMBER;
+                    break;
+                case '=':
+                    type = TokenType.EQUALS;
+                    break;
+                case '{':
+                    type = TokenType.OPEN_BRACE;
 
-//enum dfer { };
-//enum class dfg { };
-//enum dfg2 {esrgdthy };
-//enum dfg3 {efrg = 3 };
-//enum dfg4 {dfg = 8, rtg };
-//enum dffgg;
+                    break;
+                case '}':
+                    type = TokenType.CLOSE_BRACE;
+                    break;
+                case ',':
+                    type = TokenType.COMMA;
+                    break;
+                case ';':
+                    type = TokenType.SEMICOLON;
+                    break;
+                case '\n':
+                case '\r':
+                    type = TokenType.NEWLINE;
+                    break;
+                default:
+                    type = TokenType.INVALID;
+                    break;
+            }
+            tokens.Add(new Token(text, start, end, type));
+            end++;
+        }
+        return tokens;
+    }
+};

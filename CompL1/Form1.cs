@@ -1,3 +1,4 @@
+using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
@@ -167,42 +168,76 @@ namespace CompL1
 
         private void richTextBox1_TextChanged(object sender, EventArgs e)
         {
-            MatchCollection lexeme_matches = Regex.Matches(richTextBox1.Text, lexemes);
-            int st = richTextBox1.SelectionStart, end = richTextBox1.SelectionLength;
-            Color orig = Color.Black;
-
-            richTextBox2.Text = Lexer.lexText(richTextBox1.Text);
-            richTextBox4.Text = Lexer.QuickFixErrors(richTextBox1.Text);
-
-            richTextBox1.SelectionStart = 0;
-            richTextBox1.SelectionLength = richTextBox1.Text.Length;
-            richTextBox1.SelectionColor = orig;
-
-            richTextBox2.Focus();
-            foreach (Match match in lexeme_matches)
+            Lexer lexer = new Lexer();
+            Parser parser = new Parser();
+            parser.state = State.STATE_INIT;
+            string expr = richTextBox1.Text;
+            List<Token> tokens = lexer.tokenize(expr);
+            ParseResult error;
+            int error_count = 0;
+            richTextBox2.Text = "";
+            foreach (var token in tokens)
             {
-                richTextBox1.SelectionStart = match.Index;
-                richTextBox1.SelectionLength = match.Length;
-                richTextBox1.SelectionColor = Color.Red;
-            }
-            richTextBox1.Focus();
-            richTextBox1.SelectionStart = st;
-            richTextBox1.SelectionLength = end;
-            richTextBox1.SelectionColor = orig;
-
-            string[] splittedLines = richTextBox1.Text.Split(new string[] { "\r", "\n", "\r\n" }
-            , StringSplitOptions.None);
-            int linecount = splittedLines.Length;
-
-            if (linecount != 0)
-            {
-                richTextBox3.Clear();
-                for (int i = 1; i < linecount + 1; i++)
+                error = parser.parse(token);
+                if (error.is_error)
                 {
-                    richTextBox3.AppendText(Convert.ToString(i) + "\n");
+                    richTextBox2.Text += error.Stringize(expr);
+                    error_count++;
                 }
             }
+            richTextBox2.Text += "\nВсего ошибок: " + error_count;
+            parser = new Parser();
+            parser.state = State.STATE_INIT;
+            richTextBox4.Text = "";
+            foreach (var token in tokens) // Нейтрализация
+            {
+                error = parser.parse(token);
+                if (!error.is_error) 
+                    richTextBox4.Text += error.actualValue() + " ";
+            }
         }
+
+
+        //private void richTextBox1_TextChanged(object sender, EventArgs e)
+        //{
+        //    MatchCollection lexeme_matches = Regex.Matches(richTextBox1.Text, lexemes);
+        //    int st = richTextBox1.SelectionStart, end = richTextBox1.SelectionLength;
+        //    Color orig = Color.Black;
+
+        //    richTextBox2.Text = Lexer.tokenize(richTextBox1.Text);
+        //    richTextBox4.Text = Lexer.QuickFixErrors(richTextBox1.Text);
+
+        //    richTextBox1.SelectionStart = 0;
+        //    richTextBox1.SelectionLength = richTextBox1.Text.Length;
+        //    richTextBox1.SelectionColor = orig;
+
+        //    richTextBox2.Focus();
+        //    foreach (Match match in lexeme_matches)
+        //    {
+        //        richTextBox1.SelectionStart = match.Index;
+        //        richTextBox1.SelectionLength = match.Length;
+        //        richTextBox1.SelectionColor = Color.Red;
+        //    }
+        //    richTextBox1.Focus();
+        //    richTextBox1.SelectionStart = st;
+        //    richTextBox1.SelectionLength = end;
+        //    richTextBox1.SelectionColor = orig;
+
+        //    string[] splittedLines = richTextBox1.Text.Split(new string[] { "\r", "\n", "\r\n" }
+        //    , StringSplitOptions.None);
+        //    int linecount = splittedLines.Length;
+
+        //    if (linecount != 0)
+        //    {
+        //        richTextBox3.Clear();
+        //        for (int i = 1; i < linecount + 1; i++)
+        //        {
+        //            richTextBox3.AppendText(Convert.ToString(i) + "\n");
+        //        }
+        //    }
+        //}
+
+
 
         void Form1_DragEnter(object sender, DragEventArgs e)
         {
