@@ -25,7 +25,7 @@ enum ff445dd {el1=1, el2=2, el3=3};
 <SEMICOLON> -> <END>
 ```
 ## Граф конечного автомата
-![alt text](граф.PNG)
+![alt text](графКА.PNG)
 ## Тестовые примеры
 ![alt text](тест1.PNG)
 ![alt text](тест2.PNG)
