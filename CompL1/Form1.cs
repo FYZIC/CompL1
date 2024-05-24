@@ -192,7 +192,7 @@ namespace CompL1
             foreach (var token in tokens) // Ќейтрализаци€
             {
                 error = parser.parse(token);
-                if (!error.is_error) 
+                if (!error.is_error)
                     richTextBox4.Text += error.actualValue() + " ";
             }
         }
@@ -258,6 +258,36 @@ namespace CompL1
         private void richTextBox4_TextChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void toolStripMenuItem2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void р¬1ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Regex.IsMatch(richTextBox1.Text, "^[0-1][0-9]:[0-5][0-9]:[0-5][0-9]$")|| Regex.IsMatch(richTextBox1.Text, "^[2][0-3]:[0-5][0-9]:[0-5][0-9]$"))
+                richTextBox2.Text = "строка " + richTextBox1.Text + " соответсвует регул€рному выражению 1}";
+            else
+                richTextBox2.Text = "строка " + richTextBox1.Text + " не соответсвует регул€рному выражению 1}";
+
+        }
+
+        private void р¬2ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Regex.IsMatch(richTextBox1.Text, "^[0-9]{12}$") || Regex.IsMatch(richTextBox1.Text, "^[0-9]{10}$"))
+                richTextBox2.Text = "строка " + richTextBox1.Text + " соответсвует регул€рному выражению 2";
+            else
+                richTextBox2.Text = "строка " + richTextBox1.Text + " не соответсвует регул€рному выражению 2";
+        }
+
+        private void р¬3ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Regex.IsMatch(richTextBox1.Text, "^([0-9]{1,3}.){3}[0-9]{1,3}:([0-9]{1,5})?$"))
+                richTextBox2.Text = "строка " + richTextBox1.Text + " соответсвует регул€рному выражению 3";
+            else
+                richTextBox2.Text = "строка " + richTextBox1.Text + " не соответсвует регул€рному выражению 3";
         }
     }
 }
