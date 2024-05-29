@@ -1,3 +1,4 @@
+using Compl1;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -136,6 +137,22 @@ namespace CompL1
         private void RunToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
+                string input = richTextBox1.Text;
+                //string result = PolizConvr.InfixToPostfix(input);
+
+                richTextBox2.Clear();
+
+            input += "\r\n";
+
+            Parser parser = new Parser(input);
+
+            parser.Parse();
+
+            richTextBox2.AppendText(parser.Result);
+
+            //richTextBox2.Clear();
+            //richTextBox2.AppendText($"ѕроизошла ошибка: {ex.Message}");
+
         }
 
         private void HelpToolStripMenuItem_Click(object sender, EventArgs e)
@@ -168,33 +185,33 @@ namespace CompL1
 
         private void richTextBox1_TextChanged(object sender, EventArgs e)
         {
-            Lexer lexer = new Lexer();
-            Parser parser = new Parser();
-            parser.state = State.STATE_INIT;
-            string expr = richTextBox1.Text;
-            List<Token> tokens = lexer.tokenize(expr);
-            ParseResult error;
-            int error_count = 0;
-            richTextBox2.Text = "";
-            foreach (var token in tokens)
-            {
-                error = parser.parse(token);
-                if (error.is_error)
-                {
-                    richTextBox2.Text += error.Stringize(expr);
-                    error_count++;
-                }
-            }
-            richTextBox2.Text += "\n¬сего ошибок: " + error_count;
-            parser = new Parser();
-            parser.state = State.STATE_INIT;
-            richTextBox4.Text = "";
-            foreach (var token in tokens) // Ќейтрализаци€
-            {
-                error = parser.parse(token);
-                if (!error.is_error)
-                    richTextBox4.Text += error.actualValue() + " ";
-            }
+            //Lexer lexer = new Lexer();
+            //Parser parser = new Parser();
+            //parser.state = State.STATE_INIT;
+            //string expr = richTextBox1.Text;
+            //List<Token> tokens = lexer.tokenize(expr);
+            //ParseResult error;
+            //int error_count = 0;
+            //richTextBox2.Text = "";
+            //foreach (var token in tokens)
+            //{
+            //    error = parser.parse(token);
+            //    if (error.is_error)
+            //    {
+            //        richTextBox2.Text += error.Stringize(expr);
+            //        error_count++;
+            //    }
+            //}
+            //richTextBox2.Text += "\n¬сего ошибок: " + error_count;
+            //parser = new Parser();
+            //parser.state = State.STATE_INIT;
+            //richTextBox4.Text = "";
+            //foreach (var token in tokens) // Ќейтрализаци€
+            //{
+            //    error = parser.parse(token);
+            //    if (!error.is_error)
+            //        richTextBox4.Text += error.actualValue() + " ";
+            //}
         }
 
 
@@ -268,9 +285,9 @@ namespace CompL1
         private void р¬1ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (Regex.IsMatch(richTextBox1.Text, "^[0-1][0-9]:[0-5][0-9]:[0-5][0-9]$")|| Regex.IsMatch(richTextBox1.Text, "^[2][0-3]:[0-5][0-9]:[0-5][0-9]$"))
-                richTextBox2.Text = "строка " + richTextBox1.Text + " соответсвует регул€рному выражению 1}";
+                richTextBox2.Text = "строка " + richTextBox1.Text + " соответсвует регул€рному выражению 1";
             else
-                richTextBox2.Text = "строка " + richTextBox1.Text + " не соответсвует регул€рному выражению 1}";
+                richTextBox2.Text = "строка " + richTextBox1.Text + " не соответсвует регул€рному выражению 1";
 
         }
 
@@ -284,7 +301,7 @@ namespace CompL1
 
         private void р¬3ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (Regex.IsMatch(richTextBox1.Text, "^([0-9]{1,3}.){3}[0-9]{1,3}:([0-9]{1,5})?$"))
+            if (Regex.IsMatch(richTextBox1.Text, "^([0-9]{1,3}.){3}[0-9]{1,3}:(0|[1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])?$"))
                 richTextBox2.Text = "строка " + richTextBox1.Text + " соответсвует регул€рному выражению 3";
             else
                 richTextBox2.Text = "строка " + richTextBox1.Text + " не соответсвует регул€рному выражению 3";
