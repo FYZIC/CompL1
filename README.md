@@ -1,31 +1,37 @@
-# Объявление перечисляемого типа на языке C++
-## Примеры допустимых строк
-```
-enum samyil {first = 1, second, third};
-enum ff445dd {el1=1, el2=2, el3=3};
-```
-## Разработанная грамматика
-```
-<DEF> -> 'enum' <ENUM>
-<ENUM> -> letter(digit|letter|_) <ENUM_ID>
-<ENUM> -> ['class']  <CLASS>
-<CLASS> -> letter(digit|letter|_) <ENUM_ID>
-<ENUM_ID> -> '{' <OPEN_BRACE>
-<ENUM_ID> -> ';' <SEMICOLON>
-<OPEN_BRACE> -> letter(digit|letter|_) <ID>
-<OPEN_BRACE> -> '}' <CLOSE_BRACE>
-<ID> -> '}' <CLOSE_BRACE>
-<ID> -> '=' <EQUAL>
-<EQUAL> -> digit(digit) <NUMBER>
-<ID> -> ',' <COMMA>
-<COMMA> -> letter(digit|letter|_) <ID>
-<NUMBER> -> '}' <CLOSE_BRACE>
-<NUMBER> -> ',' <COMMA>
-<CLOSE_BRACE> -> ';' <SEMICOLON>
-<SEMICOLON> -> <END>
-```
-## Граф конечного автомата
-![alt text](графКА.PNG)
+# Лабораторная работа 7
+## Описание
+
+Цель работы: Разработать для грамматики алгоритм синтаксического анализа на основе метода рекурсивного спуска.
+
+## Грамматика
+G[Doc]:
+1. Doc -> λ | Element Doc
+2. Element -> Text | <em> Doc </em> | <p> Doc </p> | <ol> List </ol>
+3. List -> λ | ListItem List
+4. ListItem -> <li> Text </li>
+5. Text -> λ | Char Text
+Char -> a | b | c | … | z | A | B | … | Z
+Примечание: данными продукциями описывается язык
+HTML-разметки.
+
+
+## Язык грамматики
+Примеры слов, принадлежащих языку L(G[Doc]):
+1) <p>ghjk</p>
+2) <li>Text</li><em>Doc</em>
+3) dfgh
+
+## Классификация грамматики
+
+Грамматика G[<Выражение>] является контекстно-свободной
+Контекстно-свободные грамматики имеют правила
+следующего вида: A → a, где A∈VN, a∈V*.
+Здесь в левой части правил может быть только один нетерминальный
+символ, а в правой – любая последовательность из терминалов и
+нетерминалов.
+Все правила имеют одну и ту же форму: нетерминал → строка терминалов и/или нетерминалов. Это делает грамматику контекстно-свободной.
+
 ## Тестовые примеры
-![alt text](тест1.PNG)
-![alt text](тест2.PNG)
+![Схема](71.png)
+
+![Схема](72.png)
